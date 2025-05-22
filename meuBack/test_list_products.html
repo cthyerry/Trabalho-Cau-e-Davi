@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lista de Produtos</title>
+    <style>
+        .produto {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+        }
+        .produto img {
+            max-width: 100px;
+            max-height: 100px;
+        }
+        .paginacao {
+            margin-top: 20px;
+        }
+        .paginacao button {
+            margin-right: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h2>Lista de Produtos</h2>
+    <div id="produtos"></div>
+    <div id="paginacao" class="paginacao"></div>
+
+    <script>
+    let paginaAtual = 1;
+    let totalPaginas = 1;
+
+    function carregarProdutos(pagina = 1) {
+        fetch(`http://localhost/Biblioteca/meuBack/list_products.php?page=${pagina}` )
+        .then(response => response.json())
+        .then(data => {
+            const produtosDiv = document.getElementById('produtos');
+            produtosDiv.innerHTML = '';
+            
+            if (data.produtos && data.produtos.length > 0) {
+                data.produtos.forEach(produto => {
+                    const produtoDiv = document.createElement('div');
+                    produtoDiv.className = 'produto';
+                    
+                    let imagemHtml = '';
+                    if (produto.imagem_url) {
+                        imagemHtml = `<img src="${produto.imagem_url}" alt="${produto.nome}">`;
+                    }
+                    
+                    produtoDiv.innerHTML = `
+                        <h3>${produto.nome}</h3>
+                        <p>${produto.descricao}</p>
+                        <p>Preço: R$ ${parseFloat(produto.preco).toFixed(2)}</p>
+                        ${imagemHtml}
+                    `;
+                    
+                    produtosDiv.appendChild(produtoDiv);
+                });
+                
+                // Atualizar paginação
+                paginaAtual = data.paginacao.pagina_atual;
+                totalPaginas = data.paginacao.total_paginas;
+                atualizarPaginacao();
+            } else {
+                produtosDiv.innerHTML = '<p>Nenhum produto encontrado.</p>';
+            }
+        })
+        .catch(error => {
+            document.getElementById('produtos').innerHTML = 
+                `<p style="color: red">Erro ao carregar produtos: ${error.message}</p>`;
+        });
+    }
+
+    function atualizarPaginacao() {
+        const paginacaoDiv = document.getElementById('paginacao');
+        paginacaoDiv.innerHTML = '';
+        
+        if (totalPaginas > 1) {
+            // Botão anterior
+            const btnAnterior = document.createElement('button');
+            btnAnterior.innerText = 'Anterior';
+            btnAnterior.disabled = paginaAtual === 1;
+            btnAnterior.addEventListener('click', () => {
+                if (paginaAtual > 1) {
+                    carregarProdutos(paginaAtual - 1);
+                }
+            });
+            paginacaoDiv.appendChild(btnAnterior);
+            
+            // Números das páginas
+            for (let i = 1; i <= totalPaginas; i++) {
+                const btnPagina = document.createElement('button');
+                btnPagina.innerText = i;
+                btnPagina.disabled = i === paginaAtual;
+                btnPagina.addEventListener('click', () => {
+                    carregarProdutos(i);
+                });
+                paginacaoDiv.appendChild(btnPagina);
+            }
+            
+            // Botão próximo
+            const btnProximo = document.createElement('button');
+            btnProximo.innerText = 'Próximo';
+            btnProximo.disabled = paginaAtual === totalPaginas;
+            btnProximo.addEventListener('click', () => {
+                if (paginaAtual < totalPaginas) {
+                    carregarProdutos(paginaAtual + 1);
+                }
+            });
+            paginacaoDiv.appendChild(btnProximo);
+        }
+    }
+
+    // Carregar produtos ao iniciar a página
+    window.onload = function() {
+        carregarProdutos();
+    };
+    </script>
+</body>
+</html>

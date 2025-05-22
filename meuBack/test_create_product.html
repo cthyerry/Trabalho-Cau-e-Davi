@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Teste de Cadastro de Produto</title>
+</head>
+<body>
+    <h2>Cadastrar Produto</h2>
+    <div id="message"></div>
+    <form id="productForm" enctype="multipart/form-data">
+        <div>
+            <label>Nome:</label>
+            <input type="text" name="nome" required>
+        </div>
+        <div>
+            <label>Descrição:</label>
+            <textarea name="descricao" required></textarea>
+        </div>
+        <div>
+            <label>Preço:</label>
+            <input type="number" name="preco" step="0.01" required>
+        </div>
+        <div>
+            <label>Imagem:</label>
+            <input type="file" name="imagem">
+        </div>
+        <div>
+            <label>ID do Usuário:</label>
+            <input type="number" name="usuario_id" required>
+        </div>
+        <button type="submit">Cadastrar Produto</button>
+    </form>
+
+    <script>
+    document.getElementById('productForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        
+        fetch('http://localhost/Biblioteca/meuBack/create_product.php', {
+            method: 'POST',
+            body: formData
+        } )
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('message').innerHTML = 
+                `<p style="color: ${data.error ? 'red' : 'green'}">${data.message || data.error}</p>`;
+        })
+        .catch(error => {
+            document.getElementById('message').innerHTML = 
+                `<p style="color: red">Erro: ${error.message}</p>`;
+        });
+    });
+    </script>
+</body>
+</html>
